@@ -84,6 +84,5 @@
  */
 - (BOOL)isActiveAutoRenewableSubscriptionForDate:(NSDate*)date;
 
-- (void)verifyTransactionSuccess:(void (^)())successBlock
-                         failure:(void (^)(NSError *error))failureBlock;
+
 @end

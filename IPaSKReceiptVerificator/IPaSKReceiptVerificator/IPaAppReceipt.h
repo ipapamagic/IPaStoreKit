@@ -103,5 +103,6 @@
  */
 + (IPaAppReceipt*)bundleReceipt;
 
-
+- (void)verifyTransactionSuccess:(void (^)())successBlock
+                         failure:(void (^)(NSError *error))failureBlock;
 @end
