@@ -9,13 +9,12 @@
 /* Begin PBXBuildFile section */
 		6E1319971A933AEC00F42B9D /* IPaSKReceiptVerificator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E13198B1A933AEC00F42B9D /* IPaSKReceiptVerificator.framework */; };
 		6E13199E1A933AEC00F42B9D /* IPaSKReceiptVerificatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E13199D1A933AEC00F42B9D /* IPaSKReceiptVerificatorTests.m */; };
-		6EE977021A93A41D00671486 /* IPaSKReceiptVerificator.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE977001A93A41D00671486 /* IPaSKReceiptVerificator.h */; };
+		6E31E7451B4ADF260083DC1C /* IPaIAPReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9116731B49907B00D6E140 /* IPaIAPReceipt.swift */; };
+		6E31E7461B4ADFB60083DC1C /* IPaAppReceipt.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE977061A9596F800671486 /* IPaAppReceipt.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6E31E7471B4ADFCB0083DC1C /* IPaSKReceipt.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE9771C1A964AC100671486 /* IPaSKReceipt.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6E9116751B499D8D00D6E140 /* IPaAppReceipt.m in Sources */ = {isa = PBXBuildFile; fileRef = 6EE977071A9596F800671486 /* IPaAppReceipt.m */; };
+		6EE977021A93A41D00671486 /* IPaSKReceiptVerificator.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE977001A93A41D00671486 /* IPaSKReceiptVerificator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6EE977051A9427AC00671486 /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EE977041A9427AC00671486 /* openssl.framework */; };
-		6EE977081A9596F800671486 /* IPaAppReceipt.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE977061A9596F800671486 /* IPaAppReceipt.h */; };
-		6EE977091A9596F800671486 /* IPaAppReceipt.m in Sources */ = {isa = PBXBuildFile; fileRef = 6EE977071A9596F800671486 /* IPaAppReceipt.m */; };
-		6EE9770C1A95A08300671486 /* IPaIAPReceipt.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE9770A1A95A08300671486 /* IPaIAPReceipt.h */; };
-		6EE9770D1A95A08300671486 /* IPaIAPReceipt.m in Sources */ = {isa = PBXBuildFile; fileRef = 6EE9770B1A95A08300671486 /* IPaIAPReceipt.m */; };
-		6EE9771E1A964AC100671486 /* IPaSKReceipt.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EE9771C1A964AC100671486 /* IPaSKReceipt.h */; };
 		6EE9771F1A964AC100671486 /* IPaSKReceipt.m in Sources */ = {isa = PBXBuildFile; fileRef = 6EE9771D1A964AC100671486 /* IPaSKReceipt.m */; };
 /* End PBXBuildFile section */
 
@@ -35,14 +34,14 @@
 		6E1319961A933AEC00F42B9D /* IPaSKReceiptVerificatorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IPaSKReceiptVerificatorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E13199C1A933AEC00F42B9D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6E13199D1A933AEC00F42B9D /* IPaSKReceiptVerificatorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IPaSKReceiptVerificatorTests.m; sourceTree = "<group>"; };
+		6E9116731B49907B00D6E140 /* IPaIAPReceipt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IPaIAPReceipt.swift; sourceTree = "<group>"; };
 		6EE977001A93A41D00671486 /* IPaSKReceiptVerificator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPaSKReceiptVerificator.h; sourceTree = "<group>"; };
 		6EE977041A9427AC00671486 /* openssl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = openssl.framework; path = "../../../OpenSSL-for-iPhone/openssl.framework"; sourceTree = "<group>"; };
 		6EE977061A9596F800671486 /* IPaAppReceipt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPaAppReceipt.h; sourceTree = "<group>"; };
 		6EE977071A9596F800671486 /* IPaAppReceipt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IPaAppReceipt.m; sourceTree = "<group>"; };
-		6EE9770A1A95A08300671486 /* IPaIAPReceipt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPaIAPReceipt.h; sourceTree = "<group>"; };
-		6EE9770B1A95A08300671486 /* IPaIAPReceipt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IPaIAPReceipt.m; sourceTree = "<group>"; };
 		6EE9771C1A964AC100671486 /* IPaSKReceipt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPaSKReceipt.h; sourceTree = "<group>"; };
 		6EE9771D1A964AC100671486 /* IPaSKReceipt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IPaSKReceipt.m; sourceTree = "<group>"; };
+		6EED17601B4AE61E00F835CC /* IPaAppReceipt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IPaAppReceipt.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,8 +89,8 @@
 				6EE9771D1A964AC100671486 /* IPaSKReceipt.m */,
 				6EE977061A9596F800671486 /* IPaAppReceipt.h */,
 				6EE977071A9596F800671486 /* IPaAppReceipt.m */,
-				6EE9770A1A95A08300671486 /* IPaIAPReceipt.h */,
-				6EE9770B1A95A08300671486 /* IPaIAPReceipt.m */,
+				6EED17601B4AE61E00F835CC /* IPaAppReceipt.swift */,
+				6E9116731B49907B00D6E140 /* IPaIAPReceipt.swift */,
 				6EE977001A93A41D00671486 /* IPaSKReceiptVerificator.h */,
 				6E13198E1A933AEC00F42B9D /* Supporting Files */,
 			);
@@ -131,10 +130,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6EE9771E1A964AC100671486 /* IPaSKReceipt.h in Headers */,
-				6EE9770C1A95A08300671486 /* IPaIAPReceipt.h in Headers */,
-				6EE977081A9596F800671486 /* IPaAppReceipt.h in Headers */,
+				6E31E7461B4ADFB60083DC1C /* IPaAppReceipt.h in Headers */,
 				6EE977021A93A41D00671486 /* IPaSKReceiptVerificator.h in Headers */,
+				6E31E7471B4ADFCB0083DC1C /* IPaSKReceipt.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -234,9 +232,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6EE9770D1A95A08300671486 /* IPaIAPReceipt.m in Sources */,
+				6E9116751B499D8D00D6E140 /* IPaAppReceipt.m in Sources */,
 				6EE9771F1A964AC100671486 /* IPaSKReceipt.m in Sources */,
-				6EE977091A9596F800671486 /* IPaAppReceipt.m in Sources */,
+				6E31E7451B4ADF260083DC1C /* IPaIAPReceipt.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -346,10 +344,13 @@
 		6E1319A21A933AEC00F42B9D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"/Users/IPaPa/Documents/MyWork/iOSLibrary/OpenSSL-for-iPhone",
@@ -359,16 +360,22 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_WHOLE_MODULE_OPTIMIZATION = YES;
 			};
 			name = Debug;
 		};
 		6E1319A31A933AEC00F42B9D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"/Users/IPaPa/Documents/MyWork/iOSLibrary/OpenSSL-for-iPhone",
@@ -378,6 +385,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "";
+				SWIFT_WHOLE_MODULE_OPTIMIZATION = YES;
 			};
 			name = Release;
 		};
