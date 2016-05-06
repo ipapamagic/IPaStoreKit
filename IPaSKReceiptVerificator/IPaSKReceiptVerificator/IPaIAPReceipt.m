@@ -7,7 +7,7 @@
 //
 
 #import "IPaIAPReceipt.h"
-#import "IPaSKReceiptVerificator.h"
+//#import "IPaSKReceiptVerificator.h"
 #define IPaIAPReceiptASN1TypeQuantity 1701
 #define IPaIAPReceiptASN1TypeProductIdentifier 1702
 #define IPaIAPReceiptASN1TypeTransactionIdentifier 1703
@@ -31,41 +31,41 @@
             switch (type)
             {
                 case IPaIAPReceiptASN1TypeQuantity:
-                    _quantity = IPaASN1ReadInteger(&p, length);
+                    _quantity = [self ASN1ReadInteger:&p omax:length];
                     break;
                 case IPaIAPReceiptASN1TypeProductIdentifier:
-                    _productIdentifier = IPaASN1ReadUTF8String(&p, length);
+                    _productIdentifier = [self ASN1ReadUTF8String:&p omax:length];
                     break;
                 case IPaIAPReceiptASN1TypeTransactionIdentifier:
-                    _transactionIdentifier = IPaASN1ReadUTF8String(&p, length);
+                    _transactionIdentifier = [self ASN1ReadUTF8String:&p omax:length];
                     break;
                 case IPaIAPReceiptASN1TypePurchaseDate:
                 {
-                    NSString *string = IPaASN1ReadIA5SString(&p, length);
+                    NSString *string = [self ASN1ReadIA5SString:&p omax:length];
                     _purchaseDate = [self formatRFC3339String:string];
                     break;
                 }
                 case IPaIAPReceiptASN1TypeOriginalTransactionIdentifier:
-                    _originalTransactionIdentifier = IPaASN1ReadUTF8String(&p, length);
+                    _originalTransactionIdentifier = [self ASN1ReadUTF8String:&p omax:length];
                     break;
                 case IPaIAPReceiptASN1TypeOriginalPurchaseDate:
                 {
-                    NSString *string = IPaASN1ReadIA5SString(&p, length);
+                    NSString *string = [self ASN1ReadIA5SString:&p omax:length];
                     _originalPurchaseDate = [self formatRFC3339String:string];
                     break;
                 }
                 case IPaIAPReceiptASN1TypeSubscriptionExpirationDate:
                 {
-                    NSString *string = IPaASN1ReadIA5SString(&p, length);
+                    NSString *string = [self ASN1ReadIA5SString:&p omax:length];
                     _subscriptionExpirationDate = [self formatRFC3339String:string];
                     break;
                 }
                 case IPaIAPReceiptASN1TypeWebOrderLineItemID:
-                    _webOrderLineItemID = IPaASN1ReadInteger(&p, length);
+                    _webOrderLineItemID = [self ASN1ReadInteger:&p omax:length];
                     break;
                 case IPaIAPReceiptASN1TypeCancellationDate:
                 {
-                    NSString *string = IPaASN1ReadIA5SString(&p, length);
+                    NSString *string = [self ASN1ReadIA5SString:&p omax:length];
                     _cancellationDate = [self formatRFC3339String:string];
                     break;
                 }

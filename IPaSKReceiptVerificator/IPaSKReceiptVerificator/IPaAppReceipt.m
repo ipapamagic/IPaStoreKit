@@ -22,13 +22,13 @@
 //  limitations under the License.
 //
 
-#import "IPaAppReceipt.h"
+#import "IPaSKReceiptVerificator.h"
 #import <UIKit/UIKit.h>
 #import "IPaIAPReceipt.h"
-#import "IPaSKReceiptVerificator.h"
 #import <openssl/sha.h>
 #import <openssl/objects.h>
 #import <openssl/x509.h>
+
 #define IPaAppReceiptASN1TypeBundleIdentifier 2
 #define IPaAppReceiptASN1TypeAppVersion 3
 #define IPaAppReceiptASN1TypeOpaqueValue 4
@@ -56,10 +56,13 @@
             {
                 case IPaAppReceiptASN1TypeBundleIdentifier:
                     _bundleIdentifierData = data;
-                    _bundleIdentifier = IPaASN1ReadUTF8String(&s, length);
+                    _bundleIdentifier =
+                    
+                    
+                    [self ASN1ReadUTF8String:&s omax:length];
                     break;
                 case IPaAppReceiptASN1TypeAppVersion:
-                    _appVersion = IPaASN1ReadUTF8String(&s, length);
+                    _appVersion = [self ASN1ReadUTF8String:&s omax:length];
                     break;
                 case IPaAppReceiptASN1TypeOpaqueValue:
                     _opaqueValue = data;
@@ -74,11 +77,11 @@
                     break;
                 }
                 case IPaAppReceiptASN1TypeOriginalAppVersion:
-                    _originalAppVersion = IPaASN1ReadUTF8String(&s, length);
+                    _originalAppVersion = [self ASN1ReadUTF8String:&s omax:length];
                     break;
                 case IPaAppReceiptASN1TypeExpirationDate:
                 {
-                    NSString *string = IPaASN1ReadIA5SString(&s, length);
+                    NSString *string = [self ASN1ReadIA5SString:&s omax:length];
                     _expirationDate = [self formatRFC3339String:string];
                     break;
                 }

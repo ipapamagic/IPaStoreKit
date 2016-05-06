@@ -24,19 +24,19 @@ class IPaSKProductRequest : SKProductsRequest,SKProductsRequestDelegate {
         return request
     }
     static func retainRequest(request:IPaSKProductRequest) {
-        if find(self.SKRequestList,request) == nil {
+        if self.SKRequestList.indexOf(request) == nil {
             SKRequestList.append(request)
         }
     }
     static func releaseRequest(request:IPaSKProductRequest) {
-        if let index = find(self.SKRequestList,request) {
+        if let index = self.SKRequestList.indexOf(request) {
             SKRequestList.removeAtIndex(index)
         }
     }
     
     
 // MARK:SKProductsRequestDelegate
-    func productsRequest(request: SKProductsRequest!, didReceiveResponse response: SKProductsResponse!)
+    func productsRequest(request: SKProductsRequest, didReceiveResponse response: SKProductsResponse)
     {
         self.handler?(request,response);
     

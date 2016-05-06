@@ -15,6 +15,8 @@ FOUNDATION_EXPORT double IPaSKReceiptVerificatorVersionNumber;
 FOUNDATION_EXPORT const unsigned char IPaSKReceiptVerificatorVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <IPaSKReceiptVerificator/PublicHeader.h>
-#import <Foundation/Foundation.h>
-#import "IPaIAPReceipt.h"
-#import "IPaAppReceipt.h"
+
+#import <IPaSKReceiptVerificator/IPaSKReceipt.h>
+#import <IPaSKReceiptVerificator/IPaAppReceipt.h>
+//#import <IPaSKReceiptVerificator/IPaSKReceiptVerificator-Swift.h>
+//#import "IPaSKReceipt.h"

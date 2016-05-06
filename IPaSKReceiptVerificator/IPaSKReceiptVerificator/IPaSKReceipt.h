@@ -16,15 +16,22 @@
 #define IPaSKLog(...)
 #endif
 
-int IPaASN1ReadInteger(const uint8_t **pp, long omax);
-NSData* IPaASN1ReadOctectString(const uint8_t **pp, long omax);
-NSString* IPaASN1ReadString(const uint8_t **pp, long omax, int expectedTag, NSStringEncoding encoding);
-NSString* IPaASN1ReadUTF8String(const uint8_t **pp, long omax);
-NSString* IPaASN1ReadIA5SString(const uint8_t **pp, long omax);
+//int ASN1ReadInteger(const uint8_t **pp, long omax);
+//NSData* ASN1ReadOctectString(const uint8_t **pp, long omax);
+//NSString* ASN1ReadString(const uint8_t **pp, long omax, int expectedTag, NSStringEncoding encoding);
+//NSString* ASN1ReadUTF8String(const uint8_t **pp, long omax);
+//NSString* ASN1ReadIA5SString(const uint8_t **pp, long omax);
 
 @import StoreKit;
 
 @interface IPaSKReceipt : NSObject
+- (int) ASN1ReadInteger:(const uint8_t **)pp omax:(long)omax;
+- (NSData*) ASN1ReadOctectString:(const uint8_t **)pp omax:(long)omax;
+- (NSString*) ASN1ReadString:(const uint8_t **)pp omax:(long) omax expectedTag:(int) expectedTag encoding:(NSStringEncoding) encoding;
+- (NSString*) ASN1ReadUTF8String:(const uint8_t **)pp omax:(long) omax;
+- (NSString*) ASN1ReadIA5SString:(const uint8_t **)pp omax:(long) omax;
+
+
 
 - (void)enumerateASN1Attributes:(const uint8_t*)p length:(long)tlength usingBlock:(void (^)(NSData *data, int type))block;
 

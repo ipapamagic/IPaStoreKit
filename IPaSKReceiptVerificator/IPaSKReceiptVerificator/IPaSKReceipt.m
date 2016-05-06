@@ -14,9 +14,67 @@
 
 
 // From https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ReceiptFields.html#//apple_ref/doc/uid/TP40010573-CH106-SW1
+//#pragma mark - ANS1
+//
+//int ASN1ReadInteger(const uint8_t **pp, long omax)
+//{
+//    int tag, asn1Class;
+//    long length;
+//    int value = 0;
+//    ASN1_get_object(pp, &length, &tag, &asn1Class, omax);
+//    if (tag == V_ASN1_INTEGER)
+//    {
+//        for (int i = 0; i < length; i++)
+//        {
+//            value = value * 0x100 + (*pp)[i];
+//        }
+//    }
+//    *pp += length;
+//    return value;
+//}
+//
+//NSData* ASN1ReadOctectString(const uint8_t **pp, long omax)
+//{
+//    int tag, asn1Class;
+//    long length;
+//    NSData *data = nil;
+//    ASN1_get_object(pp, &length, &tag, &asn1Class, omax);
+//    if (tag == V_ASN1_OCTET_STRING)
+//    {
+//        data = [NSData dataWithBytes:*pp length:length];
+//    }
+//    *pp += length;
+//    return data;
+//}
+//
+//NSString* ASN1ReadString(const uint8_t **pp, long omax, int expectedTag, NSStringEncoding encoding)
+//{
+//    int tag, asn1Class;
+//    long length;
+//    NSString *value = nil;
+//    ASN1_get_object(pp, &length, &tag, &asn1Class, omax);
+//    if (tag == expectedTag)
+//    {
+//        value = [[NSString alloc] initWithBytes:*pp length:length encoding:encoding];
+//    }
+//    *pp += length;
+//    return value;
+//}
+//
+//NSString* ASN1ReadUTF8String(const uint8_t **pp, long omax)
+//{
+//    return ASN1ReadString(pp, omax, V_ASN1_UTF8STRING, NSUTF8StringEncoding);
+//}
+//
+//NSString* ASN1ReadIA5SString(const uint8_t **pp, long omax)
+//{
+//    return ASN1ReadString(pp, omax, V_ASN1_IA5STRING, NSASCIIStringEncoding);
+//}
+
+@implementation IPaSKReceipt
 #pragma mark - ANS1
 
-int IPaASN1ReadInteger(const uint8_t **pp, long omax)
+- (int) ASN1ReadInteger:(const uint8_t **)pp omax:(long)omax
 {
     int tag, asn1Class;
     long length;
@@ -32,8 +90,7 @@ int IPaASN1ReadInteger(const uint8_t **pp, long omax)
     *pp += length;
     return value;
 }
-
-NSData* IPaASN1ReadOctectString(const uint8_t **pp, long omax)
+- (NSData*) ASN1ReadOctectString:(const uint8_t **)pp omax:(long)omax
 {
     int tag, asn1Class;
     long length;
@@ -46,8 +103,7 @@ NSData* IPaASN1ReadOctectString(const uint8_t **pp, long omax)
     *pp += length;
     return data;
 }
-
-NSString* IPaASN1ReadString(const uint8_t **pp, long omax, int expectedTag, NSStringEncoding encoding)
+- (NSString*) ASN1ReadString:(const uint8_t **)pp omax:(long) omax expectedTag:(int) expectedTag encoding:(NSStringEncoding) encoding
 {
     int tag, asn1Class;
     long length;
@@ -60,18 +116,17 @@ NSString* IPaASN1ReadString(const uint8_t **pp, long omax, int expectedTag, NSSt
     *pp += length;
     return value;
 }
-
-NSString* IPaASN1ReadUTF8String(const uint8_t **pp, long omax)
+- (NSString*) ASN1ReadUTF8String:(const uint8_t **)pp omax:(long) omax
 {
-    return IPaASN1ReadString(pp, omax, V_ASN1_UTF8STRING, NSUTF8StringEncoding);
+    return [self ASN1ReadString:pp omax:omax  expectedTag:V_ASN1_UTF8STRING encoding:NSUTF8StringEncoding];
 }
 
-NSString* IPaASN1ReadIA5SString(const uint8_t **pp, long omax)
+
+- (NSString*) ASN1ReadIA5SString:(const uint8_t **)pp omax:(long) omax
 {
-    return IPaASN1ReadString(pp, omax, V_ASN1_IA5STRING, NSASCIIStringEncoding);
+    return [self ASN1ReadString:pp omax:omax  expectedTag:V_ASN1_IA5STRING encoding:NSASCIIStringEncoding];
 }
 
-@implementation IPaSKReceipt
 #pragma mark - Utils
 
 
@@ -97,10 +152,9 @@ NSString* IPaASN1ReadIA5SString(const uint8_t **pp, long omax)
         
         const uint8_t *sequenceEnd = p + length;
         
-        const int attributeType = IPaASN1ReadInteger(&p, sequenceEnd - p);
-        IPaASN1ReadInteger(&p, sequenceEnd - p); // Consume attribute version
+        const int attributeType = [self ASN1ReadInteger:&p omax:sequenceEnd - p]; // Consume attribute version
         
-        NSData *data = IPaASN1ReadOctectString(&p, sequenceEnd - p);
+        NSData *data = [self ASN1ReadOctectString:&p omax: sequenceEnd - p];
         if (data)
         {
             block(data, attributeType);

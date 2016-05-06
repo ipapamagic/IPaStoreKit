@@ -7,25 +7,27 @@
 //
 
 import StoreKit
-typealias IPaSKCompleteHandler = (SKPaymentTransaction?,NSError?) -> ()
-typealias IPaSKRestoreCompleteHandler = ([SKPaymentTransaction]?,NSError?) -> ()
+public typealias IPaSKCompleteHandler = (SKPaymentTransaction?,NSError?) -> ()
+public typealias IPaSKRestoreCompleteHandler = ([SKPaymentTransaction]?,NSError?) -> ()
 enum IPaSKError:Int {
     case isPurchasing = 0
     case PurchaseFail
     case isRestoring
 }
-class IPaStoreKit : NSObject,SKPaymentTransactionObserver
+public class IPaStoreKit : NSObject,SKPaymentTransactionObserver
 {
-    class var sharedInstance : IPaStoreKit {
+    static func sharedInstance() -> IPaStoreKit {
+        
         struct Static {
             static var onceToken : dispatch_once_t = 0
             static var instance : IPaStoreKit? = nil
         }
         dispatch_once(&Static.onceToken) {
             Static.instance = IPaStoreKit()
-            SKPaymentQueue.defaultQueue().addTransactionObserver(Static.instance)
+            SKPaymentQueue.defaultQueue().addTransactionObserver(Static.instance!)
         }
         return Static.instance!
+        
     }
     var handlers = [String:IPaSKCompleteHandler]()
     var restoreHandler:IPaSKRestoreCompleteHandler?
@@ -35,8 +37,8 @@ class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     @param productIdentifier the product identifier
     @param complete the completion block.
     */
-    func buyProduct(productIdentifier:String ,complete:IPaSKCompleteHandler) {
-        if let handler = handlers[productIdentifier] {
+    public func buyProduct(productIdentifier:String ,complete:IPaSKCompleteHandler) {
+        if let _ = handlers[productIdentifier] {
             let error = NSError(domain: "com.IPaStoreKit", code: IPaSKError.isPurchasing.rawValue, userInfo: nil)
             complete(nil,error)
             return
@@ -44,7 +46,7 @@ class IPaStoreKit : NSObject,SKPaymentTransactionObserver
         handlers[productIdentifier] = complete
         IPaSKProductRequest.requestProductID(productIdentifier, complete: {
             request,response in
-            if let product = response.products.first as? SKProduct {
+            if let product = response.products.first {
                 SKPaymentQueue.defaultQueue().addPayment(SKPayment(product: product))
             }
         })
@@ -53,7 +55,7 @@ class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     @abstract *Asynchronously* restore the purchases for the product.
     @param complete the completion block.
     */
-    func restorePurcheses(complete:IPaSKRestoreCompleteHandler) {
+    public func restorePurcheses(complete:IPaSKRestoreCompleteHandler) {
         if restoreHandler != nil {
             let error = NSError(domain: "com.IPaStoreKit", code: IPaSKError.isRestoring.rawValue, userInfo: nil)
             complete(nil,error)
@@ -62,8 +64,8 @@ class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     }
     
     //MARK: SKPaymentTransactionObserver
-    func paymentQueue(queue: SKPaymentQueue!, updatedTransactions transactions: [AnyObject]!) {
-        let transactions = transactions as! [SKPaymentTransaction]
+    public func paymentQueue(queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+        let transactions = transactions 
         for transaction in transactions {
             let productIdentifier = transaction.payment.productIdentifier
             if let handler = handlers[productIdentifier] {
@@ -78,40 +80,41 @@ class IPaStoreKit : NSObject,SKPaymentTransactionObserver
                     let error = NSError(domain: "com.IPaStoreKit", code: IPaSKError.PurchaseFail.rawValue, userInfo: nil)
                     handler(transaction,error)
                     handlers.removeValueForKey(productIdentifier)
-                    
-                default:
+                case .Deferred:
                     handler(transaction,nil)
+                case .Purchasing:
+                    handler(transaction,nil)
+
                     break
                 }
-
+                
             }
         };
     }
     
     // Sent when transactions are removed from the queue (via finishTransaction:).
 
-    func paymentQueue(queue: SKPaymentQueue!, removedTransactions transactions: [AnyObject]!) {
+    public func paymentQueue(queue: SKPaymentQueue, removedTransactions transactions: [SKPaymentTransaction]) {
         
     }
     
     // Sent when an error is encountered while adding transactions from the user's purchase history back to the queue.
     
-    func paymentQueue(queue: SKPaymentQueue!, restoreCompletedTransactionsFailedWithError error: NSError!) {
+    public func paymentQueue(queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: NSError) {
 
         restoreHandler?(nil,error)
     }
     
     // Sent when all transactions from the user's purchase history have successfully been added back to the queue.
 
-    func paymentQueueRestoreCompletedTransactionsFinished(queue: SKPaymentQueue!) {
-        if let transactions = queue.transactions as? [SKPaymentTransaction] {
-            restoreHandler?(transactions,nil)
-        }
+    public func paymentQueueRestoreCompletedTransactionsFinished(queue: SKPaymentQueue) {
+        
+        restoreHandler?(queue.transactions,nil)
     }
     
     // Sent when the download state has changed.
 
-    func paymentQueue(queue: SKPaymentQueue!, updatedDownloads downloads: [AnyObject]!)
+    public func paymentQueue(queue: SKPaymentQueue, updatedDownloads downloads: [SKDownload])
     {
         
     }
