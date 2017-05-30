@@ -1,0 +1,23 @@
+PODS:
+  - FBSnapshotTestCase (2.1.4):
+    - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
+  - FBSnapshotTestCase/Core (2.1.4)
+  - FBSnapshotTestCase/SwiftSupport (2.1.4):
+    - FBSnapshotTestCase/Core
+  - IPaStoreKit (0.1.0)
+
+DEPENDENCIES:
+  - FBSnapshotTestCase
+  - IPaStoreKit (from `../`)
+
+EXTERNAL SOURCES:
+  IPaStoreKit:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  FBSnapshotTestCase: '094f9f314decbabe373b87cc339bea235a63e07a'
+  IPaStoreKit: b8cd79198521a90e5f96ae8fc59f3b4b2dd4d45b
+
+PODFILE CHECKSUM: 717379a4eb948539fa78548b9e96e0453274754c
+
+COCOAPODS: 1.2.1
