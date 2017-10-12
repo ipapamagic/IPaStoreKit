@@ -7,7 +7,7 @@
 //
 
 import UIKit
-
+import IPaStoreKit
 class ViewController: UIViewController {
 
     override func viewDidLoad() {

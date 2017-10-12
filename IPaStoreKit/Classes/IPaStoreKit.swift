@@ -9,8 +9,9 @@
 import StoreKit
 public typealias IPaSKCompleteHandler = (SKPaymentTransaction?,Error?) -> ()
 public typealias IPaSKRestoreCompleteHandler = ([SKPaymentTransaction]?,Error?) -> ()
-enum IPaSKError:Int {
-    case isPurchasing = 0
+
+public enum IPaStoreKitError:Error {
+    case isPurchasing
     case PurchaseFail
     case isRestoring
 }
@@ -32,8 +33,8 @@ public class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     */
     public func buyProduct(_ productIdentifier:String ,complete:@escaping IPaSKCompleteHandler) {
         if let _ = handlers[productIdentifier] {
-            let error = NSError(domain: "com.IPaStoreKit", code: IPaSKError.isPurchasing.rawValue, userInfo: nil)
-            complete(nil,error)
+            
+            complete(nil,IPaStoreKitError.isPurchasing)
             return
         }
         handlers[productIdentifier] = complete
@@ -50,8 +51,7 @@ public class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     */
     public func restorePurcheses(complete:@escaping IPaSKRestoreCompleteHandler) {
         if restoreHandler != nil {
-            let error = NSError(domain: "com.IPaStoreKit", code: IPaSKError.isRestoring.rawValue, userInfo: nil)
-            complete(nil,error)
+            complete(nil,IPaStoreKitError.isRestoring)
         }
         else {
             restoreHandler = complete
@@ -73,8 +73,7 @@ public class IPaStoreKit : NSObject,SKPaymentTransactionObserver
                     handlers.removeValue(forKey: productIdentifier)
                 case .failed:
                     queue.finishTransaction(transaction)
-                    let error = NSError(domain: "com.IPaStoreKit", code: IPaSKError.PurchaseFail.rawValue, userInfo: nil)
-                    handler(transaction,error)
+                    handler(transaction,IPaStoreKitError.PurchaseFail)
                     handlers.removeValue(forKey: productIdentifier)
                 case .deferred:
                     handler(transaction,nil)
@@ -114,15 +113,7 @@ public class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     {
         
     }
-    
-    
-    //MARK: Validator
-    public func validate(_ iapHandler:@escaping IPaReceiptIAPValidatorHandler,complete:@escaping IPaReceiptValidatorHandler) {
-        let validator = IPaReceiptValidator()
-        validator.validate(iapHandler,completion:complete)
         
-    }
-    
 }
 
 extension IPaStoreKit:SKProductsRequestDelegate

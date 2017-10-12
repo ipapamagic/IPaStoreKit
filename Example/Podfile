@@ -1,11 +1,7 @@
 use_frameworks!
-
+platform:ios,'8.3'
 target 'IPaStoreKit_Example' do
-  pod 'IPaStoreKit', :path => '../'
-
-  target 'IPaStoreKit_Tests' do
-    inherit! :search_paths
-
-    pod 'FBSnapshotTestCase'
-  end
+    pod 'IPaStoreKit', :path => '../'
+#pod 'TPInAppReceipt'#, :path => '~/Downloads/TPInAppReceipt-master'
+#pod 'GRKOpenSSLFramework'
 end

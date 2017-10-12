@@ -28,18 +28,20 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/ipapamagic/IPaStoreKit.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '8.3'
 
-  s.source_files = 'IPaStoreKit/Classes/**/*'
-  
+  s.ios.source_files = 'IPaStoreKit/Classes/**/*'
+  s.ios.vendored_frameworks = "IPaStoreKit/openssl.framework"
+  #s.osx.source_files = 'IPaStoreKit/Classes/**/*'
+  #s.osx.vendored_frameworks = "IPaStoreKit/openssl.framework"
   # s.resource_bundles = {
   #   'IPaStoreKit' => ['IPaStoreKit/Assets/*.png']
   # }
-
+  s.resources  = "IPaStoreKit/Assets/AppleIncRootCertificate.cer"
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
-
+#  s.dependency 'GRKOpenSSLFramework'
     s.xcconfig = {
         "SWIFT_VERSION" => "4.0",
         "SWIFT_SWIFT3_OBJC_INFERENCE" => "off"
