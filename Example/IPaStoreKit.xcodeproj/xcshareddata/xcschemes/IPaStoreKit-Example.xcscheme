@@ -53,6 +53,16 @@
                ReferencedContainer = "container:IPaStoreKit.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6E4FD0921F8EF95A002E2512"
+               BuildableName = "IPaStoreKit_ExampleTests.xctest"
+               BlueprintName = "IPaStoreKit_ExampleTests"
+               ReferencedContainer = "container:IPaStoreKit.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
