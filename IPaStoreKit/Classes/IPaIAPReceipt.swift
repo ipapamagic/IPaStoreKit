@@ -7,7 +7,7 @@
 
 import UIKit
 
-open class IPaIAPReceipt: NSObject {
+open class IPaIAPReceipt: IPaReceipt {
     /// The product identifier which purchase related to
     public var productIdentifier: String = ""
     
@@ -38,7 +38,7 @@ open class IPaIAPReceipt: NSObject {
     init(asn1Data: Data)
     {
         super.init()
-        asn1Data.enumerateASN1Attributes({
+        self.enumerateASN1Attributes(data: asn1Data, block: {
             attributes in
             if let field = IPaAppReceiptField(rawValue: attributes.type)
             {

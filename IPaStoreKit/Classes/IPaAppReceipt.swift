@@ -7,8 +7,7 @@
 
 import UIKit
 import openssl
-public typealias IPaAppReceiptValidatorHandler = (Bool,[String:Any]?) -> ()
-public typealias IPaIAPReceiptValidatorHandler = (String) -> ()
+public typealias IPaAppReceiptValidatorHandler = (IPaAppReceipt?) -> ()
 public enum IPaAppReceiptError:Error {
     case noAppReceipt
     case verifyFail
@@ -43,15 +42,15 @@ public enum IPaAppReceiptField: Int
     case cancellationDate = 1712
     case unknown = -1
 }
-open class IPaAppReceipt: NSObject {
-    var bundleIdentifier = ""
-    var appVersion = ""
-    var originalAppVersion = ""
-    var purchases = [IPaIAPReceipt]()
+open class IPaAppReceipt: IPaReceipt {
+    open var bundleIdentifier = ""
+    open var appVersion = ""
+    open var originalAppVersion = ""
+    open var purchases = [IPaIAPReceipt]()
     var bundleIdentifierData = Data()
-    var opaqueValue = Data()
+    open var opaqueValue = Data()
     var receiptHash = Data()
-    var expirationDate: String? = ""
+    open var expirationDate: String?
     private enum ValidateURL: String {
         case sandbox = "https://sandbox.itunes.apple.com/verifyReceipt"
         case production = "https://buy.itunes.apple.com/verifyReceipt"
@@ -71,18 +70,14 @@ open class IPaAppReceipt: NSObject {
         case testReceipt = 21007 //  This receipt is from the test environment, but it was sent to the production environment for verification. Send it to the test environment instead.
         case productionEnvironment = 21008 // This receipt is from the production environment, but it was sent to the test environment for verification. Send it to the production environment instead.
     }
-    
-    static open func parseAppReceipt() throws -> IPaAppReceipt {
-        guard let receiptUrl = Bundle.main.appStoreReceiptURL ,let receiptData = try? Data(contentsOf: receiptUrl) else {
-            throw IPaAppReceiptError.noAppReceipt
-        }
+    init(receiptData:Data) throws {
+        super.init()
         let receiptBio = BIO_new(BIO_s_mem())
         
         defer
         {
             BIO_free(receiptBio)
         }
-        
         var values = [UInt8](repeating:0, count:receiptData.count)
         receiptData.copyBytes(to: &values, count: receiptData.count)
         
@@ -106,7 +101,7 @@ open class IPaAppReceipt: NSObject {
             throw IPaAppReceiptError.receiptSignedDataNotFound
         }
         
-        let certificateData = try appleCertificateData()
+        let certificateData = try IPaAppReceipt.appleCertificateData()
         let verified: Int32 = 1
         
         let appleRootBIO = BIO_new(BIO_s_mem())
@@ -131,49 +126,21 @@ open class IPaAppReceipt: NSObject {
         {
             throw IPaAppReceiptError.invalidSignature
         }
-    
-        
-        
-        
         let contents: UnsafeMutablePointer<pkcs7_st> = receiptPKCS7.pointee.d.sign.pointee.contents
         let octets: UnsafeMutablePointer<ASN1_OCTET_STRING> = contents.pointee.d.data
         
         let asn1Data = Data(bytes: octets.pointee.data, count: Int(octets.pointee.length))
-
-        let appReceipt = IPaAppReceipt(asn1Data:asn1Data)
-        try appReceipt.verifyHash()
-        return appReceipt
-        
-    }
-    fileprivate static func appleCertificateData() throws -> Data
-    {
-        guard let appleRootURL = Bundle(for: IPaAppReceipt.self).url(forResource: "AppleIncRootCertificate", withExtension: "cer") else
-        {
-            throw IPaAppReceiptError.appleIncRootCertificateNotFound
-        }
-        
-        let appleRootData = try Data(contentsOf: appleRootURL)
-        
-        if appleRootData.count == 0
-        {
-            throw IPaAppReceiptError.unableToLoadAppleIncRootCertificate
-        }
-        
-        return appleRootData
-    }
-    init(asn1Data:Data) {
-        super.init()
-        asn1Data.enumerateASN1Attributes({
+        self.enumerateASN1Attributes(data:asn1Data,block: {
             attributes in
             if let field = IPaAppReceiptField(rawValue: attributes.type)
             {
                 let length = attributes.data.count
-
+                
                 var bytes = [UInt8](repeating:0, count: length)
                 attributes.data.copyBytes(to: &bytes, count: length)
-
+                
                 var ptr = UnsafePointer<UInt8>?(bytes)
-
+                
                 switch field
                 {
                 case .bundleIdentifier:
@@ -193,13 +160,39 @@ open class IPaAppReceipt: NSObject {
                     let str = asn1ReadASCIIString(&ptr, bytes.count)
                     expirationDate = str
                 default:
-//                    print("attribute.type = \(attributes.type))")
+                    //                    print("attribute.type = \(attributes.type))")
                     break
                 }
             }
-
+            
         })
+        try self.verifyHash()
     }
+//    static open func parseAppReceipt() throws -> IPaAppReceipt {
+//        guard let receiptUrl = Bundle.main.appStoreReceiptURL ,let receiptData = try? Data(contentsOf: receiptUrl) else {
+//            throw IPaAppReceiptError.noAppReceipt
+//        }
+//        let appReceipt = try IPaAppReceipt(receiptData:receiptData)
+//        return appReceipt
+//        
+//    }
+    fileprivate static func appleCertificateData() throws -> Data
+    {
+        guard let appleRootURL = Bundle(for: IPaAppReceipt.self).url(forResource: "AppleIncRootCertificate", withExtension: "cer") else
+        {
+            throw IPaAppReceiptError.appleIncRootCertificateNotFound
+        }
+        
+        let appleRootData = try Data(contentsOf: appleRootURL)
+        
+        if appleRootData.count == 0
+        {
+            throw IPaAppReceiptError.unableToLoadAppleIncRootCertificate
+        }
+        
+        return appleRootData
+    }
+    
     fileprivate func verifyHash() throws {
         var uuidBytes = UIDevice.current.identifierForVendor!.uuid
         let uuidData = Data(bytes: &uuidBytes, count: MemoryLayout.size(ofValue: uuidBytes))
@@ -240,28 +233,31 @@ open class IPaAppReceipt: NSObject {
         return receiptBundleID == appBundleID
     }
     
-    open func validate(_ iapHandler:@escaping IPaIAPReceiptValidatorHandler, completion: @escaping IPaAppReceiptValidatorHandler)
+    func validate(completion: @escaping IPaAppReceiptValidatorHandler)
     {
-        self.validate(iapHandler,password: nil, completion: completion)
+        self.validate(password: nil, completion: completion)
     }
     
-    open func validate(_ iapHandler:@escaping IPaIAPReceiptValidatorHandler,password:String?,completion: @escaping IPaAppReceiptValidatorHandler)
+    func validate(password:String?,completion: @escaping IPaAppReceiptValidatorHandler)
     {
         guard let receiptURL = Bundle.main.appStoreReceiptURL else {
-            completion(false,nil)
+            completion(nil)
             return
         }
         var data:Data?
+        var receipt:IPaAppReceipt?
         do {
             data = try Data(contentsOf: receiptURL)
+            if let receiptData = data {
+                receipt = try IPaAppReceipt(receiptData:receiptData)
+            }
         }
-            
         catch _ {
-            completion(false,nil)
+            completion(nil)
             return
         }
-        guard let receiptData = data else {
-            completion(false,nil)
+        guard let receiptData = data,let appReceipt = receipt else {
+            completion(nil)
             return
         }
         let receiptDataString = receiptData.base64EncodedString(options: Data.Base64EncodingOptions(rawValue: 0))
@@ -277,22 +273,27 @@ open class IPaAppReceipt: NSObject {
             
         catch let error as NSError {
             print(error.localizedDescription)
-            completion(false,nil)
+            completion(nil)
             return
         }
         guard let wPayloadData = payloadData else {
-            completion(false,nil)
+            completion(nil)
             return
         }
-        validateRequest(ValidateURL.production.rawValue,data:wPayloadData,iapHandler:iapHandler,complete:{
+        validateRequest(ValidateURL.production.rawValue,data:wPayloadData,complete:{
             success,status,jsonData in
             if success {
-                completion(true,jsonData)
+                completion(appReceipt)
                 return
             }
-            self.validateRequest(ValidateURL.sandbox.rawValue,data:wPayloadData,iapHandler:iapHandler,complete:{
+            self.validateRequest(ValidateURL.sandbox.rawValue,data:wPayloadData,complete:{
                 success,status,jsonData in
-                completion(success,jsonData)
+                if success {
+                    completion(appReceipt)
+                }
+                else {
+                    completion(nil)
+                }
             })
             
             
@@ -300,7 +301,7 @@ open class IPaAppReceipt: NSObject {
         })
     }
     //MARk: handleRequest
-    fileprivate func validateRequest(_ url: String, data: Data,iapHandler:@escaping IPaIAPReceiptValidatorHandler, complete: @escaping ( Bool, Int?, [String: Any]?) -> ()) {
+    fileprivate func validateRequest(_ url: String, data: Data,complete: @escaping ( Bool, Int?, [String: Any]?) -> ()) {
         
         // Request url
         guard let requestURL = URL(string: url) else {
@@ -362,15 +363,6 @@ open class IPaAppReceipt: NSObject {
                 complete(false,status,nil)
                 return
             }
-            if let inApp = receipt["in_app"] as? [[String:Any]] {
-                for receiptInApp in inApp {
-                    guard let receiptProductID = receiptInApp["product_id"] as? String else {
-                        continue
-                    }
-                    iapHandler(receiptProductID)
-                }
-            }
-            
             // standard Validation successfull
             complete(true, status, parseJSON)
             
