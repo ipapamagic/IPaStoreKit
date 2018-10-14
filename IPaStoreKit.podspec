@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'IPaStoreKit'
-  s.version          = '2.1'
+  s.version          = '2.2'
   s.summary          = 'A short description of IPaStoreKit.'
 
 # This description is used to generate tags and improve search results.
@@ -42,9 +42,6 @@ TODO: Add long description of the pod here.
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 #  s.dependency 'GRKOpenSSLFramework'
-    s.dependency 'IPaReachability' , '>= 2.0'
-    s.xcconfig = {
-        "SWIFT_VERSION" => "4.0",
-        "SWIFT_SWIFT3_OBJC_INFERENCE" => "off"
-    }
+  s.dependency 'IPaReachability' , '>= 2.0'
+  s.swift_version    = '4.2'
 end
