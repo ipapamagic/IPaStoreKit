@@ -8,9 +8,9 @@
 
 Pod::Spec.new do |s|
   s.name             = 'IPaStoreKit'
-  s.version          = '2.2'
+  s.version          = '2.3'
   s.summary          = 'A short description of IPaStoreKit.'
-
+  s.swift_version    = '5.0'
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
 #   * Try to keep it short, snappy and to the point.
@@ -43,5 +43,4 @@ TODO: Add long description of the pod here.
   # s.dependency 'AFNetworking', '~> 2.3'
 #  s.dependency 'GRKOpenSSLFramework'
   s.dependency 'IPaReachability' , '>= 2.0'
-  s.swift_version    = '4.2'
 end
