@@ -28,7 +28,7 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/ipapamagic/IPaStoreKit.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '8.3'
+  s.ios.deployment_target = '10.3'
 
   s.ios.source_files = 'IPaStoreKit/Classes/**/*'
   s.ios.vendored_frameworks = "IPaStoreKit/openssl.framework"
@@ -42,5 +42,5 @@ TODO: Add long description of the pod here.
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 #  s.dependency 'GRKOpenSSLFramework'
-  s.dependency 'IPaReachability' , '>= 2.0'
+  s.dependency 'IPaReachability' , '2.4'
 end

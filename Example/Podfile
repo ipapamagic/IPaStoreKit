@@ -1,5 +1,7 @@
+source 'https://github.com/ipapamagic/IPaPods.git'
+
 use_frameworks!
-platform:ios,'8.3'
+platform:ios,'10.3'
 target 'IPaStoreKit_Example' do
     pod 'IPaStoreKit', :path => '../'
 #pod 'TPInAppReceipt'#, :path => '~/Downloads/TPInAppReceipt-master'

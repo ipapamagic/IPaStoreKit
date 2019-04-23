@@ -156,6 +156,8 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
                     handler(transaction,nil)
 
                     break
+                @unknown default:
+                    break
                 }
                 
             }
