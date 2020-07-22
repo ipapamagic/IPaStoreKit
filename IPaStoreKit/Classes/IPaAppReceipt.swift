@@ -203,20 +203,20 @@ open class IPaAppReceipt: IPaReceipt {
         var ctx = SHA_CTX()
         
         SHA1_Init(&ctx)
-        var bytes = [UInt8](repeating:0, count: uuidData.count)
-        uuidData.copyBytes(to: &bytes, count: uuidData.count)
-        let uuidDataBytes = UnsafePointer<UInt8>(bytes)
-        SHA1_Update(&ctx, uuidDataBytes, uuidData.count)
+//        var bytes = [UInt8](repeating:0, count: uuidData.count)
+//        uuidData.copyBytes(to: &bytes, count: uuidData.count)
+//        let uuidDataBytes = UnsafePointer<UInt8>(bytes)
+        SHA1_Update(&ctx, (uuidData as NSData).bytes, uuidData.count)
         
-        bytes = [UInt8](repeating:0, count: opaqueData.count)
-        opaqueData.copyBytes(to: &bytes, count: opaqueData.count)
-        let opaqueDataBytes = UnsafePointer<UInt8>(bytes)
-        SHA1_Update(&ctx, opaqueDataBytes, opaqueData.count)
+//        bytes = [UInt8](repeating:0, count: opaqueData.count)
+//        opaqueData.copyBytes(to: &bytes, count: opaqueData.count)
+//        let opaqueDataBytes = UnsafePointer<UInt8>(bytes)
+        SHA1_Update(&ctx, (opaqueData as NSData).bytes, opaqueData.count)
         
-        bytes = [UInt8](repeating:0, count: bundleIdData.count)
-        bundleIdData.copyBytes(to: &bytes, count: bundleIdData.count)
-        let bundleIdDataBytes = UnsafePointer<UInt8>(bytes)
-        SHA1_Update(&ctx, bundleIdDataBytes, bundleIdData.count)
+//        bytes = [UInt8](repeating:0, count: bundleIdData.count)
+//        bundleIdData.copyBytes(to: &bytes, count: bundleIdData.count)
+//        let bundleIdDataBytes = UnsafePointer<UInt8>(bytes)
+        SHA1_Update(&ctx, (bundleIdData as NSData).bytes, bundleIdData.count)
         SHA1_Final(&hash, &ctx);
         
         let computedHashData = Data(bytes: &hash, count: hash.count)
