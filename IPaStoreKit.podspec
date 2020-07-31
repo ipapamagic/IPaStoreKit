@@ -42,5 +42,5 @@ TODO: Add long description of the pod here.
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 #  s.dependency 'GRKOpenSSLFramework'
-  s.dependency 'IPaReachability' , '2.4'
+  s.dependency 'IPaReachability' , '~> 2.5'
 end
