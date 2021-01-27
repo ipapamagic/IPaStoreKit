@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import openssl
+import OpenSSL
 public typealias IPaAppReceiptValidatorHandler = (IPaAppReceipt?) -> ()
 public enum IPaAppReceiptError:Error {
     case noAppReceipt
@@ -120,8 +120,8 @@ open class IPaAppReceipt: IPaReceipt {
         
         BIO_free(appleRootBIO)
         X509_STORE_free(store)
-        EVP_cleanup()
-        
+//        EVP_cleanup()
+        EVP_PBE_cleanup()
         if verified != result
         {
             throw IPaAppReceiptError.invalidSignature

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'IPaStoreKit'
-  s.version          = '2.3'
+  s.version          = '2.4'
   s.summary          = 'A short description of IPaStoreKit.'
   s.swift_version    = '5.0'
 # This description is used to generate tags and improve search results.
@@ -31,7 +31,7 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '10.3'
 
   s.ios.source_files = 'IPaStoreKit/Classes/**/*'
-  s.ios.vendored_frameworks = "IPaStoreKit/openssl.framework"
+#  s.ios.vendored_frameworks = "IPaStoreKit/openssl.framework"
   #s.osx.source_files = 'IPaStoreKit/Classes/**/*'
   #s.osx.vendored_frameworks = "IPaStoreKit/openssl.framework"
   # s.resource_bundles = {
@@ -43,4 +43,5 @@ TODO: Add long description of the pod here.
   # s.dependency 'AFNetworking', '~> 2.3'
 #  s.dependency 'GRKOpenSSLFramework'
   s.dependency 'IPaReachability' , '~> 2.5'
+  s.dependency 'OpenSSL-Universal'
 end

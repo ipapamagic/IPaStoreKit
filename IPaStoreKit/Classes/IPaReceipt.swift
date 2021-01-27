@@ -6,7 +6,8 @@
 //
 
 import UIKit
-import openssl
+import OpenSSL
+import IPaLog
 typealias ASN1Attribute = (data: Data, type: Int)
 open class IPaReceipt: NSObject {
     func enumerateASN1Attributes(data:Data, block: (ASN1Attribute) -> ())
@@ -74,15 +75,18 @@ open class IPaReceipt: NSObject {
         var value: Int = 0
         var integer: UnsafeMutablePointer<ASN1_INTEGER>
         
-        ASN1_get_object(ptr, &length, &tag, &pClass, l)
-        if tag != V_ASN1_INTEGER
-        {
-            print("ASN1 error: attribute not an integer")
-        }
+//        ASN1_get_object(ptr, &length, &tag, &pClass, l)
+//        if tag != V_ASN1_INTEGER
+//        {
+//            IPaLog("ASN1 error: attribute not an integer")
+//        }
         
-        integer = c2i_ASN1_INTEGER(nil, ptr, length)
+//        integer = c2i_ASN1_INTEGER(nil, ptr, length)
+        integer = d2i_ASN1_UINTEGER(nil, ptr, l)
         value = ASN1_INTEGER_get(integer)
         ASN1_INTEGER_free(integer)
+        
+        
         
         return value
     }
