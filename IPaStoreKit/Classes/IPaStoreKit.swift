@@ -54,7 +54,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
             handler(nil,appReceipt)
             let reachability = IPaReachability.sharedInternetReachability
             
-            if reachability.currentStatus == .reachableByWWan {
+            if !reachability.isNotReachable {
                 appReceipt.validate(completion: { receipt in
                     if let receipt = receipt {
                         handler(true,receipt)
@@ -66,7 +66,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
             }
             else {
                 reachability.addNotificationReceiver(for: "IPaStoreKit.validateReceipt", handler: { reachability in
-                    if reachability.currentStatus == .reachableByWWan {
+                    if !reachability.isNotReachable {
                         appReceipt.validate(completion: { receipt in
                             if let receipt = receipt {
                                 handler(true,receipt)

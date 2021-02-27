@@ -68,10 +68,6 @@ open class IPaReceipt: NSObject {
     
     func asn1ReadInteger(_ ptr: UnsafeMutablePointer<UnsafePointer<UInt8>?>, _ l: Int) -> Int
     {
-        var pClass: Int32 = 0
-        var tag: Int32 = 0
-        var length: Int = 0
-        
         var value: Int = 0
         var integer: UnsafeMutablePointer<ASN1_INTEGER>
         
