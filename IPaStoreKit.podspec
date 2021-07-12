@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'IPaStoreKit'
-  s.version          = '3.1'
+  s.version          = '3.2'
   s.summary          = 'A short description of IPaStoreKit.'
   s.swift_version    = '5.3'
 # This description is used to generate tags and improve search results.

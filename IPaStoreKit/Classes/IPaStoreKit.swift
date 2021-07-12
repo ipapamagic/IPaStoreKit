@@ -8,9 +8,9 @@
 
 import StoreKit
 import IPaReachability
-public typealias IPaSKCompleteHandler = (SKPaymentTransaction?,Error?) -> ()
-public typealias IPaSKRestoreCompleteHandler = ([SKPaymentTransaction]?,Error?) -> ()
-public typealias IPaSKProductRequestHandler = (SKProductsRequest,SKProductsResponse?,Error?) -> ()
+public typealias IPaSKCompleteHandler = (Result<SKPaymentTransaction,Error>) -> ()
+public typealias IPaSKRestoreCompleteHandler = (Result<[SKPaymentTransaction],Error>) -> ()
+public typealias IPaSKProductRequestHandler = (Result<(SKProductsRequest,SKProductsResponse?),Error>) -> ()
 public enum IPaStoreKitError:Error {
     case isPurchasing
     case PurchaseFail
@@ -22,6 +22,8 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     var requestList = Set<IPaSKRequest>()
     var handlers = [String:IPaSKCompleteHandler]()
     var restoreHandler:IPaSKRestoreCompleteHandler?
+    let reachability:IPaReachability = IPaReachability.forInternetConnection()!
+    var iapVerifiedObserver:NSObjectProtocol?
     open var hasAppReceipt:Bool {
         get {
             let receiptUrl = Bundle.main.appStoreReceiptURL!
@@ -35,12 +37,43 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     open func refreshReceipts(_ complete: @escaping IPaSKRequestHandler) {
         let request = SKReceiptRefreshRequest(receiptProperties: [SKReceiptPropertyIsRevoked:NSNumber(value :true)])
         let ipaSKRequest = IPaSKRequest(request:request,handler:{
-            _ipaSKRequest,error in
-            complete(_ipaSKRequest.request,error)
+            _ipaSKRequest,result in
+            let newResult = result.flatMap { _ in
+                return Result<SKRequest,Error>.success(_ipaSKRequest.request)
+            }
+            complete(newResult)
             self.requestList.remove(_ipaSKRequest)
         })
         requestList.insert(ipaSKRequest)
         request.start()
+    }
+    open func getVerifiedReceipts(_ handler:@escaping ([IPaIAPReceipt]) -> ()) {
+        let status = self.reachability.currentStatus
+        if status != .notReachable {
+            self.doVerifyIap(handler)
+        }
+        else {
+            iapVerifiedObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: IPaReachability.kIPaReachabilityChangedNotification), object: nil, queue: OperationQueue.main, using: {
+                    noti in
+                    self.doVerifyIap(handler)
+                })
+            _ = reachability.startNotifier()
+        }
+        
+    }
+    fileprivate func doVerifyIap(_ handler:@escaping ([IPaIAPReceipt]) -> ()) {
+        self.getAppReceipt({
+            validated,receipt in
+            guard let appReceipt = receipt,let validated = validated,validated else {
+                return
+            }
+            handler(appReceipt.purchases)
+            self.reachability.stopNotifier()
+            if let iapVerifiedObserver = self.iapVerifiedObserver {
+                NotificationCenter.default.removeObserver(iapVerifiedObserver)
+                self.iapVerifiedObserver = nil
+            }
+        })
     }
     open func getAppReceipt(_ handler:@escaping (Bool?,IPaAppReceipt?) -> ())
     {
@@ -92,8 +125,12 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     {
         let request = SKProductsRequest(productIdentifiers: Set([productID]))
         let ipaSKRequest = IPaSKRequest(productRequest:request,handler:{
-            _ipaSKRequest,response,error in
-            complete(_ipaSKRequest.request as! SKProductsRequest,response,error)
+            _ipaSKRequest,result in
+            let newResult = result.flatMap { response in
+                return Result<(SKProductsRequest,SKProductsResponse?),Error>.success((_ipaSKRequest.request as! SKProductsRequest,response))
+            }
+            complete(newResult)
+            
             self.requestList.remove(_ipaSKRequest)
         })
         requestList.insert(ipaSKRequest)
@@ -106,17 +143,24 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     @param productIdentifier the product identifier
     @param complete the completion block.
     */
-    public func buyProduct(_ productIdentifier:String ,complete:@escaping IPaSKCompleteHandler) {
+    public func purchaseProduct(_ productIdentifier:String ,complete:@escaping IPaSKCompleteHandler) {
         if let _ = handlers[productIdentifier] {
             
-            complete(nil,IPaStoreKitError.isPurchasing)
+            complete(.failure(IPaStoreKitError.isPurchasing))
             return
         }
         handlers[productIdentifier] = complete
-        _ = IPaStoreKit.shared.requestProductID(productIdentifier, complete: {
-            request,response,error in
-            if let response = response, let product = response.products.first {
-                SKPaymentQueue.default().add(SKPayment(product: product))
+        IPaStoreKit.shared.requestProductID(productIdentifier, complete: {
+            result in
+            
+            switch result {
+            case .success(let (_,response)):
+                if let response = response,let product = response.products.first  {
+                    SKPaymentQueue.default().add(SKPayment(product: product))
+                }
+            case .failure(let error):
+                self.handlers.removeValue(forKey: productIdentifier)
+                complete(.failure(error))
             }
         })
     }
@@ -126,7 +170,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     */
     public func restorePurcheses(complete:@escaping IPaSKRestoreCompleteHandler) {
         if restoreHandler != nil {
-            complete(nil,IPaStoreKitError.isRestoring)
+            complete(.failure(IPaStoreKitError.isRestoring))
         }
         else {
             restoreHandler = complete
@@ -144,16 +188,17 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
                 switch (transaction.transactionState) {
                 case .purchased,.restored:
                     queue.finishTransaction(transaction)
-                    handler(transaction,nil)
+                    handler(.success(transaction))
                     handlers.removeValue(forKey: productIdentifier)
                 case .failed:
                     queue.finishTransaction(transaction)
-                    handler(transaction,IPaStoreKitError.PurchaseFail)
+                    handler(.failure(IPaStoreKitError.PurchaseFail))
+                    
                     handlers.removeValue(forKey: productIdentifier)
                 case .deferred:
-                    handler(transaction,nil)
+                    break
                 case .purchasing:
-                    handler(transaction,nil)
+                    
 
                     break
                 @unknown default:
@@ -174,7 +219,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     
     public func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
 
-        restoreHandler?(nil,error)
+        self.restoreHandler?(.failure(error))
         self.restoreHandler = nil
     }
     
@@ -182,7 +227,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
 
     public func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
         
-        restoreHandler?(queue.transactions,nil)
+        self.restoreHandler?(.success(queue.transactions))
         self.restoreHandler = nil
     }
     
