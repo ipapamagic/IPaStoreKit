@@ -155,10 +155,13 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
             
             switch result {
             case .success(let (_,response)):
-                if let response = response,let product = response.products.first  {
+                if let response = response,let product = response.products.first,product.productIdentifier == productIdentifier {
                     SKPaymentQueue.default().add(SKPayment(product: product))
                 }
                 else {
+                    guard let _ = response else {
+                        return
+                    }
                     self.handlers.removeValue(forKey: productIdentifier)
                     complete(.failure(IPaStoreKitError.PurchaseFail))
                 }
