@@ -77,28 +77,20 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     }
     open func getAppReceipt(_ handler:@escaping (Bool?,IPaAppReceipt?) -> ())
     {
-        do {
-            guard let receiptUrl = Bundle.main.appStoreReceiptURL ,let receiptData = try? Data(contentsOf: receiptUrl) else {
-                handler(nil,nil)
-                return
-            }
-            let appReceipt = try IPaAppReceipt(receiptData:receiptData)
-            
-            handler(nil,appReceipt)
-            let reachability = IPaReachability.sharedInternetReachability
-            
-            if !reachability.isNotReachable {
-                appReceipt.validate(completion: { receipt in
-                    if let receipt = receipt {
-                        handler(true,receipt)
+        let refreshRequest = SKReceiptRefreshRequest()
+        let request = IPaSKRequest(request: refreshRequest) { request, result in
+            switch result {
+            case .success(_):
+                do {
+                    guard let receiptUrl = Bundle.main.appStoreReceiptURL ,let receiptData = try? Data(contentsOf: receiptUrl) else {
+                        handler(nil,nil)
+                        return
                     }
-                    else {
-                        handler(false,nil)
-                    }
-                })
-            }
-            else {
-                reachability.addNotificationReceiver(for: "IPaStoreKit.validateReceipt", handler: { reachability in
+                    let appReceipt = try IPaAppReceipt(receiptData:receiptData)
+                    
+                    handler(nil,appReceipt)
+                    let reachability = IPaReachability.sharedInternetReachability
+                    
                     if !reachability.isNotReachable {
                         appReceipt.validate(completion: { receipt in
                             if let receipt = receipt {
@@ -107,19 +99,38 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
                             else {
                                 handler(false,nil)
                             }
-                            reachability.removeNotificationReceiver(for: "IPaStoreKit.validateReceipt")
-                            
                         })
-                        
-                        
                     }
-                })
+                    else {
+                        reachability.addNotificationReceiver(for: "IPaStoreKit.validateReceipt", handler: { reachability in
+                            if !reachability.isNotReachable {
+                                appReceipt.validate(completion: { receipt in
+                                    if let receipt = receipt {
+                                        handler(true,receipt)
+                                    }
+                                    else {
+                                        handler(false,nil)
+                                    }
+                                    reachability.removeNotificationReceiver(for: "IPaStoreKit.validateReceipt")
+                                    
+                                })
+                                
+                                
+                            }
+                        })
+                    }
+                    
+                }
+                catch {
+                    handler(false,nil)
+                }
+            case .failure(_):
+                handler(false,nil)
             }
-            
         }
-        catch {
-            handler(false,nil)
-        }
+        refreshRequest.start()
+        
+        
     }
     open func requestProductID(_ productID:String, complete:@escaping IPaSKProductRequestHandler)
     {
