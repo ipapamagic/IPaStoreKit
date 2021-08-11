@@ -25,6 +25,9 @@ class IPaSKRequest: NSObject {
         super.init()
         request.delegate = self
     }
+    func start() {
+        self.request.start()
+    }
 }
 
 extension IPaSKRequest:SKRequestDelegate,SKProductsRequestDelegate

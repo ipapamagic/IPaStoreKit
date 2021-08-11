@@ -30,10 +30,13 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
             return FileManager.default.fileExists(atPath: receiptUrl.path)
         }
     }
+    
     override init() {
         super.init()
         SKPaymentQueue.default().add(self)
+        
     }
+   
     open func refreshReceipts(_ complete: @escaping IPaSKRequestHandler) {
         let request = SKReceiptRefreshRequest(receiptProperties: [SKReceiptPropertyIsRevoked:NSNumber(value :true)])
         let ipaSKRequest = IPaSKRequest(request:request,handler:{
@@ -125,10 +128,13 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
                     handler(false,nil)
                 }
             case .failure(_):
+                
                 handler(false,nil)
             }
+            self.requestList.remove(request)
         }
-        refreshRequest.start()
+        self.requestList.insert(request)
+        request.start()
         
         
     }
@@ -145,7 +151,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
             self.requestList.remove(_ipaSKRequest)
         })
         requestList.insert(ipaSKRequest)
-        request.start()
+        ipaSKRequest.start()
         
     }
     /*!
@@ -255,7 +261,9 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     {
         
     }
-        
+    public func paymentQueue(_ queue: SKPaymentQueue, shouldAddStorePayment payment: SKPayment, for product: SKProduct) -> Bool {
+        return true
+    }
 }
 
 
