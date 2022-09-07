@@ -7,7 +7,6 @@
 //
 
 import StoreKit
-import IPaReachability
 import IPaLog
 public typealias IPaSKCompleteHandler = (Result<SKPaymentTransaction,Error>) -> ()
 public typealias IPaSKRestoreCompleteHandler = (Result<[SKPaymentTransaction],Error>) -> ()
@@ -23,7 +22,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     var requestList = Set<IPaSKRequest>()
     var handlers = [String:IPaSKCompleteHandler]()
     var restoreHandler:IPaSKRestoreCompleteHandler?
-    let reachability:IPaReachability = IPaReachability.forInternetConnection()!
+    
     var iapVerifiedObserver:NSObjectProtocol?
     open var hasAppReceipt:Bool {
         get {
@@ -140,7 +139,7 @@ open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
     
     //MARK: SKPaymentTransactionObserver
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        let transactions = transactions 
+        let transactions = transactions
         for transaction in transactions {
             let productIdentifier = transaction.payment.productIdentifier
             if let handler = handlers[productIdentifier] {

@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "ipalog",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ipapamagic/IPaLog.git",
+      "state" : {
+        "revision" : "f743fdc25bd1247139ebb9f9d800230786f6000b",
+        "version" : "3.1.0"
+      }
+    }
+  ],
+  "version" : 2
+}

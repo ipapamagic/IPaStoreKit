@@ -5,7 +5,7 @@
 //  Created by IPa Chen on 2017/10/13.
 //
 
-import UIKit
+
 import StoreKit
 public typealias IPaSKRequestHandler = (Result<SKRequest,Error>) -> ()
 typealias _IPaSKRequestHandler = (IPaSKRequest,Result<Void,Error>) -> ()

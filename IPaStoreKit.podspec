@@ -8,9 +8,9 @@
 
 Pod::Spec.new do |s|
   s.name             = 'IPaStoreKit'
-  s.version          = '4.0'
+  s.version          = '4.0.0'
   s.summary          = 'A short description of IPaStoreKit.'
-  s.swift_version    = '5.3'
+  s.swift_version    = '5.5'
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
 #   * Try to keep it short, snappy and to the point.
@@ -28,20 +28,20 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/ipapamagic/IPaStoreKit.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '10.3'
+  s.ios.deployment_target = '12.0'
 
-  s.ios.source_files = 'IPaStoreKit/Classes/**/*'
+  s.ios.source_files = 'Sources/IPaStoreKit/**/*'
 #  s.ios.vendored_frameworks = "IPaStoreKit/openssl.framework"
   #s.osx.source_files = 'IPaStoreKit/Classes/**/*'
   #s.osx.vendored_frameworks = "IPaStoreKit/openssl.framework"
   # s.resource_bundles = {
   #   'IPaStoreKit' => ['IPaStoreKit/Assets/*.png']
   # }
-  s.resources  = "IPaStoreKit/Assets/AppleIncRootCertificate.cer"
+  # s.resources  = "IPaStoreKit/Assets/AppleIncRootCertificate.cer"
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 #  s.dependency 'GRKOpenSSLFramework'
-  s.dependency 'IPaReachability' , '~> 2.5'
 #  s.dependency 'OpenSSL-Universal'
+    s.dependency 'IPaLog', '~> 3.1.0'
 end
