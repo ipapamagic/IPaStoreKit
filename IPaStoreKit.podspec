@@ -8,9 +8,9 @@
 
 Pod::Spec.new do |s|
   s.name             = 'IPaStoreKit'
-  s.version          = '4.0.0'
-  s.summary          = 'A short description of IPaStoreKit.'
-  s.swift_version    = '5.5'
+  s.version          = '5.0.0'
+  s.summary          = 'Modern Swift wrapper for StoreKit 2 with async/await support.'
+  s.swift_version    = '5.6'
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
 #   * Try to keep it short, snappy and to the point.
@@ -18,7 +18,8 @@ Pod::Spec.new do |s|
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+IPaStoreKit is a modern StoreKit 2 wrapper with async/await APIs, product caching, and automatic transaction verification.
+Supports iOS 15+ / macOS 12+ and integrates with IPaLog for unified logging.
                        DESC
 
   s.homepage         = 'https://github.com/ipapamagic/IPaStoreKit'
@@ -28,9 +29,10 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/ipapamagic/IPaStoreKit.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '12.0'
+  s.ios.deployment_target = '15.0'
+  s.osx.deployment_target = '12.0'
 
-  s.ios.source_files = 'Sources/IPaStoreKit/**/*'
+  s.source_files = 'Sources/IPaStoreKit/**/*'
 #  s.ios.vendored_frameworks = "IPaStoreKit/openssl.framework"
   #s.osx.source_files = 'IPaStoreKit/Classes/**/*'
   #s.osx.vendored_frameworks = "IPaStoreKit/openssl.framework"
