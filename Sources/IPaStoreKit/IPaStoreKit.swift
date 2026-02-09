@@ -3,202 +3,364 @@
 //  IPaStoreKit
 //
 //  Created by IPa Chen on 2015/8/11.
+//  Updated for StoreKit 2 in 2026/1/8
 //  Copyright 2015年 A Magic Studio. All rights reserved.
 //
 
 import StoreKit
 import IPaLog
-public typealias IPaSKCompleteHandler = (Result<SKPaymentTransaction,Error>) -> ()
-public typealias IPaSKRestoreCompleteHandler = (Result<[SKPaymentTransaction],Error>) -> ()
-public typealias IPaSKProductRequestHandler = (Result<(SKProductsRequest,SKProductsResponse?),Error>) -> ()
-public enum IPaStoreKitError:Error {
-    case isPurchasing
-    case PurchaseFail
-    case isRestoring
+
+/// Errors that can occur during StoreKit operations
+public enum IPaStoreKitError: LocalizedError {
+    case productNotFound
+    case verificationFailed
+    case userCancelled
+    case pending
+    case purchaseFailed(String)
+    case restoreFailed(String)
+    case unknown
+
+    public var errorDescription: String? {
+        switch self {
+        case .productNotFound:
+            return "Product not found"
+        case .verificationFailed:
+            return "Transaction verification failed"
+        case .userCancelled:
+            return "User cancelled the purchase"
+        case .pending:
+            return "Purchase is pending approval"
+        case .purchaseFailed(let message):
+            return "Purchase failed: \(message)"
+        case .restoreFailed(let message):
+            return "Restore failed: \(message)"
+        case .unknown:
+            return "Unknown error occurred"
+        }
+    }
 }
-open class IPaStoreKit : NSObject,SKPaymentTransactionObserver
-{
+
+/// Main StoreKit 2 manager using modern async/await APIs
+@available(iOS 15.0, macOS 12.0, *)
+public actor IPaStoreKit {
+    /// Shared singleton instance
     public static let shared = IPaStoreKit()
-    var requestList = Set<IPaSKRequest>()
-    var handlers = [String:IPaSKCompleteHandler]()
-    var restoreHandler:IPaSKRestoreCompleteHandler?
-    
-    var iapVerifiedObserver:NSObjectProtocol?
-    open var hasAppReceipt:Bool {
-        get {
-            let receiptUrl = Bundle.main.appStoreReceiptURL!
-            return FileManager.default.fileExists(atPath: receiptUrl.path)
+
+    // MARK: - Private Properties
+
+    /// Cache for loaded products
+    private var productsCache: [String: Product] = [:]
+
+    /// Set of purchased product identifiers
+    private var purchasedProductIDs: Set<String> = []
+
+    /// Task for observing transaction updates
+    private var transactionUpdateTask: Task<Void, Never>?
+
+    /// Handlers for transaction updates
+    private var transactionUpdateHandlers: [(Transaction) -> Void] = []
+
+    /// UserDefaults key for caching purchased products
+    private let purchasedProductsCacheKey = "IPaStoreKit.PurchasedProducts"
+
+    // MARK: - Initialization
+
+    private init() {
+        IPaLog("[IPaStoreKit] Initializing StoreKit 2 manager")
+
+        // Load from cache first for immediate availability
+        loadCachedPurchasedProducts()
+
+        // Start observing transaction updates
+        transactionUpdateTask = observeTransactionUpdates()
+
+        // Update purchased products from StoreKit (ensures latest state)
+        Task {
+            await updatePurchasedProducts()
         }
     }
-    open var appReceiptString:String? {
-        if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
-            FileManager.default.fileExists(atPath: appStoreReceiptURL.path) {
 
-            do {
-                let receiptData = try Data(contentsOf: appStoreReceiptURL, options: .alwaysMapped)
+    deinit {
+        transactionUpdateTask?.cancel()
+    }
 
-                return receiptData.base64EncodedString(options: [])
+    // MARK: - Product Requests
 
-                // Read receiptData
+    /// Request multiple products by their identifiers
+    /// - Parameter productIDs: Array of product identifiers
+    /// - Returns: Array of available products
+    public func requestProducts(for productIDs: [String]) async throws -> [Product] {
+        IPaLog("[IPaStoreKit] Requesting products: \(productIDs)")
+
+        // Check cache first
+        let uncachedIDs = productIDs.filter { productsCache[$0] == nil }
+
+        // Load uncached products
+        if !uncachedIDs.isEmpty {
+            let products = try await Product.products(for: uncachedIDs)
+
+            // Cache the loaded products
+            for product in products {
+                productsCache[product.id] = product
             }
-            catch {
-                IPaLog(error.localizedDescription)
-                
-            }
+
+            IPaLog("[IPaStoreKit] Loaded \(products.count) new products")
         }
-        return nil
-    }
-    override init() {
-        super.init()
-        SKPaymentQueue.default().add(self)
-        
-    }
-    open func getIAPReceipts(from responseBody:[String:Any]) -> [[String:Any]] {
-        let receipt = responseBody["receipt"] as? [String:Any] ?? [String:Any]()
-        return receipt["in_app"] as? [[String:Any]] ?? [[String:Any]]()
-        
-    }
-    open func refreshReceipts(_ complete: @escaping IPaSKRequestHandler) {
-        let request = SKReceiptRefreshRequest(receiptProperties: [SKReceiptPropertyIsRevoked:NSNumber(value :true)])
-        let ipaSKRequest = IPaSKRequest(request:request,handler:{
-            _ipaSKRequest,result in
-            let newResult = result.flatMap { _ in
-                return Result<SKRequest,Error>.success(_ipaSKRequest.request)
-            }
-            complete(newResult)
-            self.requestList.remove(_ipaSKRequest)
-        })
-        requestList.insert(ipaSKRequest)
-        request.start()
-    }
-   
-    
-    open func requestProductID(_ productID:String, complete:@escaping IPaSKProductRequestHandler)
-    {
-        let request = SKProductsRequest(productIdentifiers: Set([productID]))
-        let ipaSKRequest = IPaSKRequest(productRequest:request,handler:{
-            _ipaSKRequest,result in
-            let newResult = result.flatMap { response in
-                return Result<(SKProductsRequest,SKProductsResponse?),Error>.success((_ipaSKRequest.request as! SKProductsRequest,response))
-            }
-            complete(newResult)
-            
-            self.requestList.remove(_ipaSKRequest)
-        })
-        requestList.insert(ipaSKRequest)
-        ipaSKRequest.start()
-        
-    }
-    /*!
-    @abstract *Asynchronously* initiates the purchase for the product.
-    
-    @param productIdentifier the product identifier
-    @param complete the completion block.
-    */
-    public func purchaseProduct(_ productIdentifier:String ,complete:@escaping IPaSKCompleteHandler) {
-        if let _ = handlers[productIdentifier] {
-            
-            complete(.failure(IPaStoreKitError.isPurchasing))
-            return
+
+        // Return all requested products from cache
+        let result = productIDs.compactMap { productsCache[$0] }
+
+        if result.isEmpty {
+            IPaLog("[IPaStoreKit] No products found for IDs: \(productIDs)")
         }
-        handlers[productIdentifier] = complete
-        IPaStoreKit.shared.requestProductID(productIdentifier, complete: {
-            result in
-            
-            switch result {
-            case .success(let (_,response)):
-                if let response = response,let product = response.products.first,product.productIdentifier == productIdentifier {
-                    SKPaymentQueue.default().add(SKPayment(product: product))
+
+        return result
+    }
+
+    /// Request a single product by its identifier
+    /// - Parameter productID: Product identifier
+    /// - Returns: The requested product
+    public func requestProduct(for productID: String) async throws -> Product {
+        let products = try await requestProducts(for: [productID])
+
+        guard let product = products.first else {
+            IPaLog("[IPaStoreKit] Product not found: \(productID)")
+            throw IPaStoreKitError.productNotFound
+        }
+
+        return product
+    }
+
+    // MARK: - Purchase
+
+    /// Purchase a product by its identifier
+    /// - Parameter productID: Product identifier to purchase
+    /// - Returns: Verified transaction
+    @discardableResult
+    public func purchaseProduct(_ productID: String) async throws -> Transaction {
+        IPaLog("[IPaStoreKit] Starting purchase for: \(productID)")
+
+        let product = try await requestProduct(for: productID)
+        return try await purchaseProduct(product)
+    }
+
+    /// Purchase a product
+    /// - Parameter product: Product to purchase
+    /// - Returns: Verified transaction
+    @discardableResult
+    public func purchaseProduct(_ product: Product) async throws -> Transaction {
+        IPaLog("[IPaStoreKit] Purchasing product: \(product.id)")
+
+        let result = try await product.purchase()
+
+        switch result {
+        case .success(let verification):
+            let transaction = try checkVerification(verification)
+
+            // Finish the transaction
+            await transaction.finish()
+
+            // Update purchased products
+            await updatePurchasedProducts()
+
+            IPaLog("[IPaStoreKit] Purchase successful: \(product.id)")
+            return transaction
+
+        case .userCancelled:
+            IPaLog("[IPaStoreKit] Purchase cancelled by user: \(product.id)")
+            throw IPaStoreKitError.userCancelled
+
+        case .pending:
+            IPaLog("[IPaStoreKit] Purchase pending approval: \(product.id)")
+            throw IPaStoreKitError.pending
+
+        @unknown default:
+            IPaLog("[IPaStoreKit] Unknown purchase result")
+            throw IPaStoreKitError.unknown
+        }
+    }
+
+    // MARK: - Restore Purchases
+
+    /// Restore all completed transactions
+    /// - Returns: Array of restored transactions
+    public func restorePurchases() async throws -> [Transaction] {
+        IPaLog("[IPaStoreKit] Starting restore purchases")
+
+        var restoredTransactions: [Transaction] = []
+
+        do {
+            // Sync with App Store
+            try await AppStore.sync()
+
+            // Iterate through all current entitlements
+            for await result in Transaction.currentEntitlements {
+                do {
+                    let transaction = try checkVerification(result)
+                    restoredTransactions.append(transaction)
+                    IPaLog("[IPaStoreKit] Restored: \(transaction.productID)")
+                } catch {
+                    IPaLog("[IPaStoreKit] Failed to verify restored transaction: \(error)")
                 }
-                else {
-                    guard let _ = response else {
-                        return
-                    }
-                    self.handlers.removeValue(forKey: productIdentifier)
-                    complete(.failure(IPaStoreKitError.PurchaseFail))
-                }
-            case .failure(let error):
-                self.handlers.removeValue(forKey: productIdentifier)
-                complete(.failure(error))
             }
-        })
-    }
-    /*!
-    @abstract *Asynchronously* restore the purchases for the product.
-    @param complete the completion block.
-    */
-    public func restorePurcheses(complete:@escaping IPaSKRestoreCompleteHandler) {
-        if restoreHandler != nil {
-            complete(.failure(IPaStoreKitError.isRestoring))
-        }
-        else {
-            restoreHandler = complete
-        }
-        SKPaymentQueue.default().restoreCompletedTransactions()
-    }
-    
-    //MARK: SKPaymentTransactionObserver
-    public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        let transactions = transactions
-        for transaction in transactions {
-            let productIdentifier = transaction.payment.productIdentifier
-            if let handler = handlers[productIdentifier] {
-               
-                switch (transaction.transactionState) {
-                case .purchased,.restored:
-                    queue.finishTransaction(transaction)
-                    handler(.success(transaction))
-                    handlers.removeValue(forKey: productIdentifier)
-                case .failed:
-                    queue.finishTransaction(transaction)
-                    handler(.failure(IPaStoreKitError.PurchaseFail))
-                    
-                    handlers.removeValue(forKey: productIdentifier)
-                case .deferred:
-                    break
-                case .purchasing:
-                    
 
-                    break
-                @unknown default:
-                    break
+            // Update purchased products
+            await updatePurchasedProducts()
+
+            IPaLog("[IPaStoreKit] Restore completed: \(restoredTransactions.count) transactions")
+            return restoredTransactions
+
+        } catch {
+            IPaLog("[IPaStoreKit] Restore failed: \(error)")
+            throw IPaStoreKitError.restoreFailed(error.localizedDescription)
+        }
+    }
+
+    // MARK: - Transaction Verification
+
+    /// Verify a transaction result
+    /// - Parameter result: Verification result to check
+    /// - Returns: Verified transaction
+    private func checkVerification<T>(_ result: VerificationResult<T>) throws -> T {
+        switch result {
+        case .verified(let safe):
+            return safe
+
+        case .unverified(_, let error):
+            IPaLog("[IPaStoreKit] Verification failed: \(error)")
+            throw IPaStoreKitError.verificationFailed
+        }
+    }
+
+    // MARK: - Transaction Updates
+
+    /// Observe transaction updates in the background
+    private func observeTransactionUpdates() -> Task<Void, Never> {
+        Task.detached {
+            for await result in Transaction.updates {
+                do {
+                    let transaction = try await self.checkVerification(result)
+
+                    IPaLog("[IPaStoreKit] Transaction update: \(transaction.productID)")
+
+                    // Finish the transaction
+                    await transaction.finish()
+
+                    // Update purchased products
+                    await self.updatePurchasedProducts()
+
+                    // Notify handlers
+                    await self.notifyTransactionUpdate(transaction)
+
+                } catch {
+                    IPaLog("[IPaStoreKit] Failed to verify transaction update: \(error)")
                 }
-                
             }
-        };
+        }
     }
-    
-    // Sent when transactions are removed from the queue (via finishTransaction:).
 
-    public func paymentQueue(_ queue: SKPaymentQueue, removedTransactions transactions: [SKPaymentTransaction]) {
-        
+    /// Add a transaction update handler
+    /// - Parameter handler: Closure to handle transaction updates
+    public func addTransactionUpdateHandler(_ handler: @escaping (Transaction) -> Void) {
+        transactionUpdateHandlers.append(handler)
     }
-    
-    // Sent when an error is encountered while adding transactions from the user's purchase history back to the queue.
-    
-    public func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
 
-        self.restoreHandler?(.failure(error))
-        self.restoreHandler = nil
+    /// Remove all transaction update handlers
+    public func removeAllTransactionUpdateHandlers() {
+        transactionUpdateHandlers.removeAll()
     }
-    
-    // Sent when all transactions from the user's purchase history have successfully been added back to the queue.
 
-    public func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
-        
-        self.restoreHandler?(.success(queue.transactions))
-        self.restoreHandler = nil
+    /// Notify all handlers about a transaction update
+    private func notifyTransactionUpdate(_ transaction: Transaction) {
+        for handler in transactionUpdateHandlers {
+            handler(transaction)
+        }
     }
-    
-    // Sent when the download state has changed.
 
-    public func paymentQueue(_ queue: SKPaymentQueue, updatedDownloads downloads: [SKDownload])
-    {
-        
+    // MARK: - Purchase Status
+
+    /// Check if a product has been purchased
+    /// - Parameter productID: Product identifier to check
+    /// - Returns: True if purchased
+    public func isPurchased(_ productID: String) -> Bool {
+        return purchasedProductIDs.contains(productID)
     }
-    public func paymentQueue(_ queue: SKPaymentQueue, shouldAddStorePayment payment: SKPayment, for product: SKProduct) -> Bool {
-        return true
+
+    /// Get all purchased product IDs
+    /// - Returns: Set of purchased product identifiers
+    public func getPurchasedProducts() -> Set<String> {
+        return purchasedProductIDs
+    }
+
+    /// Load purchased products from UserDefaults cache
+    private func loadCachedPurchasedProducts() {
+        if let cachedArray = UserDefaults.standard.array(forKey: purchasedProductsCacheKey) as? [String] {
+            purchasedProductIDs = Set(cachedArray)
+            IPaLog("[IPaStoreKit] Loaded \(purchasedProductIDs.count) products from cache")
+        } else {
+            IPaLog("[IPaStoreKit] No cached purchased products found")
+        }
+    }
+
+    /// Save purchased products to UserDefaults cache
+    private func saveCachedPurchasedProducts() {
+        let array = Array(purchasedProductIDs)
+        UserDefaults.standard.set(array, forKey: purchasedProductsCacheKey)
+    }
+
+    /// Update the list of purchased products from current entitlements
+    private func updatePurchasedProducts() async {
+        var productIDs: Set<String> = []
+
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let transaction) = result {
+                // Check if subscription has expired
+                if let expirationDate = transaction.expirationDate,
+                   expirationDate < Date() {
+                    continue
+                }
+
+                productIDs.insert(transaction.productID)
+            }
+        }
+
+        purchasedProductIDs = productIDs
+
+        // Save to cache for next app launch
+        saveCachedPurchasedProducts()
+
+        IPaLog("[IPaStoreKit] Updated purchased products: \(productIDs)")
+    }
+
+    // MARK: - App Receipt (for backwards compatibility)
+
+    /// Check if app receipt exists
+    public var hasAppReceipt: Bool {
+        guard let receiptURL = Bundle.main.appStoreReceiptURL else {
+            return false
+        }
+        return FileManager.default.fileExists(atPath: receiptURL.path)
+    }
+
+    /// Get base64 encoded app receipt string
+    public var appReceiptString: String? {
+        guard let receiptURL = Bundle.main.appStoreReceiptURL,
+              FileManager.default.fileExists(atPath: receiptURL.path) else {
+            return nil
+        }
+
+        do {
+            let receiptData = try Data(contentsOf: receiptURL)
+            return receiptData.base64EncodedString()
+        } catch {
+            IPaLog("[IPaStoreKit] Failed to read receipt: \(error)")
+            return nil
+        }
+    }
+
+    /// Refresh the app receipt (for debugging or if receipt is missing)
+    public func refreshReceipt() async throws {
+        IPaLog("[IPaStoreKit] Refreshing app receipt")
+        try await AppStore.sync()
     }
 }
-
-
