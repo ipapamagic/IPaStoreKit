@@ -9,6 +9,7 @@
 
 import StoreKit
 import IPaLog
+import Combine
 
 /// Errors that can occur during StoreKit operations
 public enum IPaStoreKitError: LocalizedError {
@@ -46,12 +47,22 @@ public actor IPaStoreKit {
     /// Shared singleton instance
     public static let shared = IPaStoreKit()
 
+    // MARK: - Published Properties
+
+    /// Publisher for purchased product IDs changes
+    public nonisolated let purchasedProductIDsSubject = CurrentValueSubject<Set<String>, Never>([])
+
+    /// Publisher for observing purchased products changes
+    public nonisolated var purchasedProductIDsPublisher: AnyPublisher<Set<String>, Never> {
+        purchasedProductIDsSubject.eraseToAnyPublisher()
+    }
+
     // MARK: - Private Properties
 
     /// Cache for loaded products
     private var productsCache: [String: Product] = [:]
 
-    /// Set of purchased product identifiers
+    /// Set of purchased product identifiers (internal state)
     private var purchasedProductIDs: Set<String> = []
 
     /// Task for observing transaction updates
@@ -296,6 +307,7 @@ public actor IPaStoreKit {
     private func loadCachedPurchasedProducts() {
         if let cachedArray = UserDefaults.standard.array(forKey: purchasedProductsCacheKey) as? [String] {
             purchasedProductIDs = Set(cachedArray)
+            purchasedProductIDsSubject.send(purchasedProductIDs)
             IPaLog("[IPaStoreKit] Loaded \(purchasedProductIDs.count) products from cache")
         } else {
             IPaLog("[IPaStoreKit] No cached purchased products found")
@@ -328,6 +340,9 @@ public actor IPaStoreKit {
 
         // Save to cache for next app launch
         saveCachedPurchasedProducts()
+
+        // Publish update via Combine
+        purchasedProductIDsSubject.send(productIDs)
 
         IPaLog("[IPaStoreKit] Updated purchased products: \(productIDs)")
     }
