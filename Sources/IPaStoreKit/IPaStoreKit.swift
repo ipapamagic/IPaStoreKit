@@ -145,24 +145,28 @@ public actor IPaStoreKit {
     // MARK: - Purchase
 
     /// Purchase a product by its identifier
-    /// - Parameter productID: Product identifier to purchase
+    /// - Parameters:
+    ///   - productID: Product identifier to purchase
+    ///   - options: Purchase options (e.g. `.appAccountToken`)
     /// - Returns: Verified transaction
     @discardableResult
-    public func purchaseProduct(_ productID: String) async throws -> Transaction {
+    public func purchaseProduct(_ productID: String, options: Set<Product.PurchaseOption> = []) async throws -> Transaction {
         IPaLog("[IPaStoreKit] Starting purchase for: \(productID)")
 
         let product = try await requestProduct(for: productID)
-        return try await purchaseProduct(product)
+        return try await purchaseProduct(product, options: options)
     }
 
     /// Purchase a product
-    /// - Parameter product: Product to purchase
+    /// - Parameters:
+    ///   - product: Product to purchase
+    ///   - options: Purchase options (e.g. `.appAccountToken`)
     /// - Returns: Verified transaction
     @discardableResult
-    public func purchaseProduct(_ product: Product) async throws -> Transaction {
+    public func purchaseProduct(_ product: Product, options: Set<Product.PurchaseOption> = []) async throws -> Transaction {
         IPaLog("[IPaStoreKit] Purchasing product: \(product.id)")
 
-        let result = try await product.purchase()
+        let result = try await product.purchase(options: options)
 
         switch result {
         case .success(let verification):
