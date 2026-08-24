@@ -14,7 +14,7 @@ import Combine
 /// Errors that can occur during StoreKit operations
 public enum IPaStoreKitError: LocalizedError {
     case productNotFound
-    case verificationFailed
+    case verificationFailed(Error)
     case userCancelled
     case pending
     case purchaseFailed(String)
@@ -25,8 +25,8 @@ public enum IPaStoreKitError: LocalizedError {
         switch self {
         case .productNotFound:
             return "Product not found"
-        case .verificationFailed:
-            return "Transaction verification failed"
+        case .verificationFailed(let error):
+            return "Transaction verification failed: \(error.localizedDescription)"
         case .userCancelled:
             return "User cancelled the purchase"
         case .pending:
@@ -243,7 +243,7 @@ public actor IPaStoreKit {
 
         case .unverified(_, let error):
             IPaLog("[IPaStoreKit] Verification failed: \(error)")
-            throw IPaStoreKitError.verificationFailed
+            throw IPaStoreKitError.verificationFailed(error)
         }
     }
 
